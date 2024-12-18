@@ -1,0 +1,10 @@
+kleuren
+0 2 5 9 14
+
+
+voorbeelden:
+https://yanao87.itch.io/cave-platformer-tileset
+https://incolgames.itch.io/dungeon-platformer-tile-set-pixel-art
+https://itch.io/game-assets/genre-platformer/tag-dungeon
+https://yanao87.itch.io/dungeon-platformer-tileset
+https://aamatniekss.itch.io/castle-dungeon-f

@@ -1,0 +1,125 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "BuildAll",
+            "dependsOn": [
+                "Sjasm correct files",
+                "Compress images",
+                "SjASM build paloma rom"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Sjasm correct files",
+            "type": "shell",
+            "command": "sjasm",
+            "options": {
+                "cwd": "C:/msx/paloma"
+            },
+            "args": [
+                "-j",
+                "-s",
+                "correctfiles.asm"
+            ],
+            "windows": {
+                "command": "c:/msx/sjasm/sjasm.exe",
+                "options": {
+                    "shell": {
+                        "executable": "C:\\WINDOWS\\System32\\cmd.exe",
+                        "args": [
+                            "/d",
+                            "/c"
+                        ]
+                    }
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "isBackground": false,
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$errmatcher-sjasm"
+        },
+        {
+            "label": "SjASM build paloma rom",
+            "type": "shell",
+            "command": "sjasm",
+            "options": {
+                "cwd": "C:/msx/Paloma"
+            },
+            "args": [
+                "-j",
+                "-s",
+                "paloma.asm"
+            ],
+            "windows": {
+                "command": "c:/msx/sjasm/sjasm.exe",
+                "options": {
+                    "shell": {
+                        "executable": "C:\\WINDOWS\\System32\\cmd.exe",
+                        "args": [
+                            "/d",
+                            "/c"
+                        ]
+                    }
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "isBackground": false,
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$errmatcher-sjasm"
+        },
+        {
+            "label": "Compress images",
+            "type": "shell",
+            "command": "sjasm",
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "args": [
+                "gfx/paloma-status.cor"
+            ],
+            "windows": {
+                "command": "C:/msx/Paloma/gfx/compressimages.bat",
+                "options": {
+                    "shell": {
+                        "executable": "C:\\WINDOWS\\System32\\cmd.exe",
+                        "args": [
+                            "/d",
+                            "/c"
+                        ]
+                    }
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "isBackground": false,
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$errmatcher-sjasm"
+        }
+    ]    
+
+}
