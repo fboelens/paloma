@@ -309,7 +309,17 @@ do_passWordBS:
     ld e,76
     ld c,32
 
-    jp passWordScreen3
+    sla a
+    sla a
+    sla a
+    add a,d
+    ld d,a
+    ld a,c
+    call writeLetter
+
+    ld bc,sfx_reverse
+    call ttsfx_start
+    jp passWordScreen2
 
 passWordCheck:
     ld a,(txt_pass_position)
@@ -546,7 +556,7 @@ do_menu1Left:
 
 do_menu1Right:
     ld a,(option_dif)
-    cp 3
+    cp 4
     jp z,options
     inc a
     ld (option_dif),a
@@ -680,11 +690,24 @@ set60hz:
 do_setDifficulty:
     ld a,(option_dif)
     cp 1
-    jp z,do_setDifficultyEasy
+    jp z,do_setDifficultyBeginner
     cp 2
-    jp z,do_setDifficultyMedium
+    jp z,do_setDifficultyEasy
     cp 3
+    jp z,do_setDifficultyMedium
+    cp 4
     jp z,do_setDifficultyHard
+
+do_setDifficultyBeginner:
+    ld hl,txt_options_dif_beginner
+    call writeText
+
+    ld a,5
+    ld (defaultLives),a
+    ld bc,200
+    ld (defaultTime),bc
+    ret
+
 do_setDifficultyEasy:
     ld hl,txt_options_dif_easy
     call writeText
@@ -893,9 +916,10 @@ txt_pass_info4: db 8,184," in the first stage of a world.",255
 
 txt_options_hertz_50: db 168,162,"50Hz",255
 txt_options_hertz_60: db 168,162,"60Hz",255
-txt_options_dif_easy: db 168,98,"Easy  ",255
-txt_options_dif_medium: db 168,98,"Medium",255
-txt_options_dif_hard: db 168,98,"Hard  ",255
+txt_options_dif_easy: db 168,98,    "Normal  ",255
+txt_options_dif_medium: db 168,98,  "Hard    ",255
+txt_options_dif_hard: db 168,98,    "Die-hard",255
+txt_options_dif_beginner: db 168,98,"Beginner",255
 
 pw1: db "AvRf"
 pw2: db "p64E"

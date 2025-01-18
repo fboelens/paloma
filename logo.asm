@@ -36,7 +36,7 @@ logo:
 	ei
 	
 	;options
-	ld a,1 ; difficulty
+	ld a,2 ; difficuly is 
 	ld (option_dif),a
     ld a,5
     ld (defaultLives),a

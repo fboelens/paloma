@@ -97,7 +97,7 @@ maps_world5:
     incbin "world5/paloma5-7f.pal"
     db 1,18 ; player position
     db 4,4,4,left,5,true;  enemy 1 @todo
-    db 4,8,4,left,5,true ;  enemy 2 @todo
+    db 4,8,4,left,5,false ;  enemy 2 @todo
     db 4,12,4,left,5,false ; enemy
     db 19,18,4,right,1,false ; enemy
     db 0,0,0,left,0,false ; enemy
@@ -106,9 +106,9 @@ maps_world5:
 
     incbin "world5/paloma5-8f.pal"
     db 28,6 ; player position
-    db 8,2,1,down,2,true;  enemy 1 @todo
-    db 6,18,6,left,9,true ;  enemy 2 @todo
-    db 20,10,5,right,1,true ; enemy
+    db 8,2,1,down,2,false;  enemy 1 @todo
+    db 6,18,6,left,9,false ;  enemy 2 @todo
+    db 20,10,5,right,1,false ; enemy
     db 3,6,5,right,1,false ; enemy
     db 12,14,6,right,7,false ; enemy
     db 25,18,6,right,7,false ; enemy
@@ -116,7 +116,7 @@ maps_world5:
 
     incbin "world5/paloma5-9f.pal"
     db 29,14 ; player position
-    db 24,18,4,left,1,true;  enemy 1 @todo
+    db 24,18,4,left,1,false;  enemy 1 @todo
     db 15,2,1,down,2,true ;  enemy 2 @todo
     db 12,18,3,left,7,false ; enemy
     db 25,10,3,right,1,false ; enemy

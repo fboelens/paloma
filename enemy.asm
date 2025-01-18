@@ -460,7 +460,7 @@ enemyWait
 
 bossMoveTable:
     ;db 1,3,4,255
-    db 1,3,4,5,6,7,2,1,1,1,1,3,255
+    db 1,1,1,1,3,4,5,1,1,1,1,1,3,3,6,7,2,1,1,1,1,3,255
 
 enemyMovementAIBubble:
     push hl

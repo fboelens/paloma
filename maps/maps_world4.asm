@@ -120,7 +120,7 @@ maps_world4:
     db 4,18,   3,left,1,false;  enemy 1
     db 20,4,   4,left,5,false ;  enemy 2
     db 25,7,   4,right,5,false ; enemy 3
-    db 12,10,   4,right,7,false ; enemy 4
+    db 21,10,   4,right,7,false ; enemy 4
     db 0,0,   0,left,0,false ; enemy 5
     db 0,0,   0,right,0,false ; enemy 6
     db 0,0 ; box 

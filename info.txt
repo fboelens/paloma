@@ -1,10 +1,6 @@
-kleuren
-0 2 5 9 14
-
-
-voorbeelden:
-https://yanao87.itch.io/cave-platformer-tileset
-https://incolgames.itch.io/dungeon-platformer-tile-set-pixel-art
-https://itch.io/game-assets/genre-platformer/tag-dungeon
-https://yanao87.itch.io/dungeon-platformer-tileset
-https://aamatniekss.itch.io/castle-dungeon-f
+changelog:
+- added difficulty beginner, where objects like skulls can't hurt you
+- modified jump table, so the player doesn't float too much
+- changed logo to Infinite
+- decreased difficulty of some levels
+- changed ghost sprite that looked too much like a bubble bobble ghost

@@ -60,9 +60,8 @@ iceMoveLeft:
     dec a
     ld (playerIceLeft),a
 
-    call playerLeft
-    ret
-
+    jp playerLeft
+    
 iceMoveRight:
     ld a,(onIce)
     cp false
@@ -81,8 +80,7 @@ iceMoveRight:
     dec a
     ld (playerIceRight),a
 
-    call playerRight
-    ret
+    jp playerRight
 
 playerMovementNormal:
     ; player moves to the left
@@ -190,7 +188,6 @@ playerLeft.2:
 
 playerLeft.3:
     jp playerJumpSpriteLeft
-    ret
 
 playerRight:
     ld a,(playerIceLeft)
@@ -271,12 +268,10 @@ playerRight.2:
 
     ld hl,playerMovePointer
     inc (hl)
-
-    ret;
+    ret
 
 playerRight.3:
     jp playerJumpSpriteRight
-    ret
 
 playerMovePointerReset:
     ld hl,playerMove
@@ -383,12 +378,9 @@ playerJump:
     ld a,(hl)
     inc hl
     ld ( playerJumpPosition),hl
-
-
-    cp 255
+    cp 128
     jp z,playerJumpReset
     ld b,a
-
     ld a,(upBlocked)
     cp true
     ret z
@@ -469,7 +461,8 @@ playerJumpReset2
     ret
 
 playerJumpTable:
-    db -4,-4,-4,-4,-4,-2,-2,-2,-2,0,0,0,0,0,0,0,0,0,255
+    ;db -4,-4,-4,-4,-4,-2,-2,-2,-2,0,0,0,0,0,0,0,0,0,128 ; 30
+    db -4,-4,-4,-4,-4,-2,-2,-2,-2,-2,0,0,0,0,2,2,128
 
 ; do all surrounding tile checks
 checkPlayerSurroundings:
@@ -522,6 +515,7 @@ checkPlayerSurroundings1:
     ld a,c
     call checkPlayerSurroundingsFallBlocker
     call z,blockDown
+
 
     ; check rechtsonder voor vallen
     ld hl,(spritePositionPlayer)
@@ -808,6 +802,7 @@ checkPlayerSpecialTiles:
     jp z,setPlayerIsDead
     cp tile_animationDead+2
     jp z,setPlayerIsDead
+    
     cp tile_animationDead+3
     jp z,setPlayerIsDead
 
@@ -815,6 +810,12 @@ checkPlayerSpecialTiles:
     jp z,setSwitchOff
     cp tile_switch_off
     jp z,setSwitchOn
+
+    ld c,a
+    ld a,(option_dif)
+    cp 1 ; beginner
+    ld a,c
+    ret z
 
     ld c,a
     sub 240
@@ -1024,9 +1025,7 @@ killAllEnemies2:
     djnz killAllEnemies2
 
     ld b,100
-    call wait
-
-    ret
+    jp wait
 
 ;-------------------------------------
 ; invincible
@@ -1043,14 +1042,11 @@ doPlayerInvisible:
     call SetColor
 
     ld	bc,sfx_invincible
-    call	ttsfx_start
-
-    ret
+    jp ttsfx_start
+    
 doPlayerInvisible2:
     ld hl,(colorSetPointer)
-    call SetColor
-
-    ret
+    jp SetColor
 
 setPlayerInvincible:
     ld a,0
@@ -1062,16 +1058,14 @@ setPlayerInvincible:
 
     ld a,true
     ld (playerInvincible),a
-
     ret
-setPlayerUnInvincible:
-    ld hl,(colorSetPointer)
-    call SetColor
 
+setPlayerUnInvincible:
     ld a,false
     ld (playerInvincible),a
 
-    ret
+    ld hl,(colorSetPointer)
+    jp SetColor
 
 ;-------------------------------------
 ; extra live
@@ -1089,8 +1083,7 @@ setPlayerLife:
     call writeLifes
 
     ld a,50
-    call addScore
-    ret
+    jp addScore
 
 ;-------------------------------------
 ; reverse
@@ -1099,8 +1092,8 @@ doPlayerReverse:
     ld a,(isrReverse)
     sub 25
     call ns,setPlayerUnReverse
-
     ret
+
 setPlayerReverse:
     ld a,0
     ld (hl),a
@@ -1306,10 +1299,7 @@ checkBoxUnderGround:
     call checkPlayerSurroundingsBreakFloor
     pop hl
     jp z,breakDownFloor
-
-    call setBoxDown
-
-    ret
+    jp setBoxDown
 
 setBoxDown:
     ld hl,(spritePositionBox)
@@ -1397,20 +1387,15 @@ breakDownFloorBroken:
     ld a,0 ; vervangende tile    
     ld (hl),a
 
-    call replaceTileDefault
-    ret
+    jp replaceTileDefault
 
 autoMovePlayerLeft:
     call blockDown
-    call playerLeft
-
-    ret
+    jp playerLeft
 
 autoMovePlayerRight:
     call blockDown
-    call playerRight    
-
-    ret
+    jp playerRight    
 
 ; check if player is on a breaking floor
 checkPlayerSurroundingsBreakFloor:

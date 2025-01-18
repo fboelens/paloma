@@ -1,0 +1,184 @@
+Sjasm Z80 Assembler v0.42c - www.xl2s.tk             [2024.12.27 - 14:47:11]
+
+correctfiles.asm
+Errors: 0
+
+       1   00:0000                          output c:/msx/Paloma/gfx/paloma-status.cor
+       2   00:0000  (1400)                  incbin "gfx/paloma-status.SC5",7,128*40
+       3   00:1400                      
+       4   00:1400                          output c:/msx/Paloma/gfx/paloma-title.cor
+       5   00:0000  (6A00)                  incbin "gfx/paloma-title.SC5",7,128*212
+       6   00:6A00                      
+       7   00:6A00                          output c:/msx/Paloma/gfx/paloma-options.cor
+       8   00:0000  (6A00)                  incbin "gfx/paloma-options.SC5",7,128*212
+       9   00:6A00                      
+      10   00:6A00                          output c:/msx/Paloma/gfx/paloma-world1.cor
+      11   00:0000  (6000)                  incbin "gfx/paloma-world1.SC5",7,128*192
+      12   00:6000                      
+      13   00:6000                          output c:/msx/Paloma/gfx/paloma-world2.cor
+      14   00:0000  (6000)                  incbin "gfx/paloma-world2.SC5",7,128*192
+      15   00:6000                      
+      16   00:6000                          output c:/msx/Paloma/gfx/paloma-world3.cor
+      17   00:0000  (6000)                  incbin "gfx/paloma-world3.SC5",7,128*192
+      18   00:6000                      
+      19   00:6000                          output c:/msx/Paloma/gfx/paloma-world4.cor
+      20   00:0000  (6000)                  incbin "gfx/paloma-world4.SC5",7,128*192
+      21   00:6000                      
+      22   00:6000                          output c:/msx/Paloma/gfx/paloma-world5.cor
+      23   00:0000  (6000)                  incbin "gfx/paloma-world5.SC5",7,128*192    
+      24   00:6000                      
+      25   00:6000                          output c:/msx/Paloma/gfx/paloma-intro1.cor
+      26   00:0000  (6600)                  incbin "gfx/paloma-intro1.SC5",7,128*204
+      27   00:6600                      
+      28   00:6600                          output c:/msx/Paloma/gfx/paloma-intro2.cor
+      29   00:0000  (6000)                  incbin "gfx/paloma-intro2.SC5",7,128*192
+      30   00:6000                      
+      31   00:6000                          output c:/msx/Paloma/gfx/paloma-intro3.cor
+      32   00:0000  (2D00)                  incbin "gfx/paloma-intro3.SC5",7,128*90
+      33   00:2D00                      
+      34   00:2D00                          output c:/msx/Paloma/gfx/paloma-ending.cor
+      35   00:0000  (D400)                  incbin "gfx/paloma-ending.SC8",7,256*212
+      36   00:D400                      
+      37   00:D400                          output c:/msx/Paloma/gfx/paloma-logo.cor
+      38   00:0000  (6A00)                  incbin "gfx/paloma-logo.SC5",7,128*212
+      39   00:6A00                      
+      40   00:6A00                          output c:/msx/Paloma/gfx/paloma-between.cor
+      41   00:0000  (4200)                  incbin "gfx/paloma-between.SC5",7,128*132
+
+    LABELS
+-------------------------------------------------
+
+
+ Output: correctfiles.out
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00000000
+
+    No output
+
+ Output: c:\msx\Paloma\gfx\paloma-status.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00001400
+
+   Address   Length Align   Label
+   00000000    5120         
+
+ Output: c:\msx\Paloma\gfx\paloma-title.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006A00
+
+   Address   Length Align   Label
+   00000000   27136         
+
+ Output: c:\msx\Paloma\gfx\paloma-options.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006A00
+
+   Address   Length Align   Label
+   00000000   27136         
+
+ Output: c:\msx\Paloma\gfx\paloma-world1.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-world2.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-world3.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-world4.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-world5.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-intro1.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006600
+
+   Address   Length Align   Label
+   00000000   26112         
+
+ Output: c:\msx\Paloma\gfx\paloma-intro2.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006000
+
+   Address   Length Align   Label
+   00000000   24576         
+
+ Output: c:\msx\Paloma\gfx\paloma-intro3.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00002D00
+
+   Address   Length Align   Label
+   00000000   11520         
+
+ Output: c:\msx\Paloma\gfx\paloma-ending.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 0000D400
+
+   Address   Length Align   Label
+   00000000   54272         
+
+ Output: c:\msx\Paloma\gfx\paloma-logo.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00006A00
+
+   Address   Length Align   Label
+   00000000   27136         
+
+ Output: c:\msx\Paloma\gfx\paloma-between.cor
+-------------------------------------------------
+
+ Page: 00
+  Org: 00000000  Size: *  Used: 00004200
+
+   Address   Length Align   Label
+   00000000   16896         

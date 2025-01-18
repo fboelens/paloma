@@ -66,7 +66,7 @@ up:             equ 00001000b
 true:           equ 1
 false:          equ 0
 
-define CHEATMODE
+;define CHEATMODE
 define MSX2				; Used in speed equalization
 define SFXPLAY_ENABLED	; Enable the SFX functionality.
 ;define TAIL_ON			; Limit volume to 1

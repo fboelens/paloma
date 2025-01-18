@@ -306,6 +306,7 @@ isr:
     call movePlatform
 
     call music
+    
 
     ld a,(isrCounter)
     cp 11
