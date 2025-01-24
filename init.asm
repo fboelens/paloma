@@ -58,14 +58,14 @@ init_start:
     ld bc,15*18
     ldir
 
+    ld hl,spritePosOrg
+    ld de,spritePositionPlayer
+    ld bc,88
+    ldir
+
     ld hl,textbarOrg
     ld de,textbar
     ld bc,72
-    ldir
-
-    ld hl,spritePosOrg
-    ld de,spritePositionPlayer
-    ld bc,128
     ldir
 
 	call memload_statusandfont

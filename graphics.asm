@@ -231,10 +231,10 @@ colorFader.Decrease2:
 	dec c
 colorFader.NoChange2:
 	ld a,b
-	sla a
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
+	add a,a
 	or c
 
 	ld (de),a
@@ -302,7 +302,7 @@ checkTrigger:
 	cp $ff
 	ret z ; joystick action button?
 
-	ld a,0
+	xor a
 	call gttrig
 	cp $ff
 	
@@ -310,7 +310,7 @@ checkTrigger:
 
 checkJoyStickWait:
 	call checkJoyStick
-	cp 0
+	or a
 	jp nz,checkJoyStickWait
 	ret
 
@@ -320,15 +320,15 @@ checkJoyStick:
 	ld (ix+1),0
 	
 	; check keyboard
-	ld a,0
+	xor a
 	call gtstck
-	cp 0
+	or a
 	jp nz,checkJoyStick2
 
 	; nothing happened? check joystick 0
 	ld a,1
 	call gtstck
-	cp 0
+	or a
 	ret z ; nothing
 
 checkJoyStick2:
@@ -440,9 +440,9 @@ writeTextLoop:
 
     ld a,c
     and %00011111
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (lesx),a
     
     push hl
@@ -471,9 +471,9 @@ writeLetter:
 
     ld a,c
     and %00011111
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (lesx),a
 
     ld a,d

@@ -1,7 +1,7 @@
 ; generate maps and animation of the tiles
 generateMap:
 
-    ld a,0
+    xor a
     ld (mapbgdx),a
     ld (mapbgdy),a
     ld (platform1X),a
@@ -31,17 +31,17 @@ generateMapBGLoop:
 
 	ld b,a
 	and %00011000		; bereken sy
-    sla a
-    sla a
+    add a,a
+    add a,a
 	ld (mapbgsy),a
 
 	ld a,b
 	and %00000111		; bereken sx
-	sla a
-	sla a
-    sla a
-    sla a
-    sla a
+	add a,a
+	add a,a
+    add a,a
+    add a,a
+    add a,a
 	ld (mapbgsx),a
 
     push hl
@@ -59,7 +59,7 @@ generateMapBGLoop:
 
     dec c
     ld a,c
-    cp 0
+    or a
     jp z,generateMap2
 
     ld a,(mapbgdy)
@@ -73,7 +73,7 @@ generateMap2:
     ld hl,copyBackground
     call DoCopy
 
-    ld a,0
+    xor a
     ld (keysLeft),a
 
     ; pak juiste map..
@@ -90,7 +90,7 @@ generateMapLoop:
     push bc
 
     ld a,(hl)
-    cp 0 
+    or a 
     jp z,generateMapLoop2
 
     cp tile_blockPlatform
@@ -105,9 +105,9 @@ generateMapLoop:
 
 	ld a,b
 	and %00011111		; bereken sx
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
 	ld (mapsx),a
 
     ld a,(mapsy)
@@ -172,7 +172,7 @@ generateMapLoop2:
 
     dec c
     ld a,c
-    cp 0
+    or a
     ret z
 
     ld a,(mapdy)
@@ -215,16 +215,16 @@ setupMapObjects:
     ld de,768
     add hl,de
     ld a,(hl)
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (spritePositionPlayer+1),a
     ld (spritePositionPlayer+5),a
     inc hl
     ld a,(hl)
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     dec a   ; shifted + 1 bug for sprites
     ld (spritePositionPlayer),a
     ld (spritePositionPlayer+4),a
@@ -247,7 +247,7 @@ setupMapObjectEnemies:
     push bc
     ld a,(hl) ; enemy number
     ld hl,0
-    cp 0
+    or a
     jp z,setupMapObjectEnemies3
   
 
@@ -279,12 +279,12 @@ setupMapObjectEnemies3
 
     inc iy
     ; enemy dead
-    ld a,0
+    xor a
     ld (iy),a
 
     inc hl
     inc iy    
-    ld a,0
+    xor a
     ld (iy),a ; ai state
     inc iy
     ld a,(hl)
@@ -311,18 +311,18 @@ setupMapObjectEnemies3
 
 setEnemySpritePos:
     ld a,(hl) ; xpos enemie
-    cp 0
+    or a
     jp z,setEnemySpritePos2
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld c,a
 
     inc hl
     ld a,(hl) ;y pos enemie
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     dec a
     ret
 
@@ -345,7 +345,7 @@ savePlatform1:
     ld a,(mapdx) ; y-positie van destination opslaan
     ld (hl),a
     pop hl
-    ld a,0
+    xor a
     ret
 
 savePlatform2:
@@ -360,7 +360,7 @@ savePlatform2:
     ld (p2rdx),a
     ld (p2rsx),a
     pop hl
-    ld a,0
+    xor a
     ret
 
 saveSpike:
@@ -376,7 +376,7 @@ saveSpike:
     inc hl
     ld (spikePos),hl
     pop hl
-    ld a,0
+    xor a
     ret
 
 saveAnimationTile:
@@ -421,7 +421,7 @@ animateSpikes:
 ; spikespace takes 3 positions per spike (atm 64/3 spikes max)
 animateSpikesLoop:
     ld a,(hl) ; spike nummer
-    cp 0
+    or a
     ret z ; animaties doorlopen?
     inc a ; zet hier volgende tile klaar
     cp tile_spikeUp+4 ; laatste animatie? dan resetten
@@ -443,9 +443,9 @@ animateSpikesLoop:
 
 	ld a,c
 	and %00011111		; bereken sx
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
 	ld (spikesx2),a
 
     inc hl
@@ -514,7 +514,7 @@ animateTiles:
     ld hl,animationSpace
 animateTilesLoop:
     ld a,(hl)
-    cp 0
+    or a
     ret z ; animaties doorlopen?
 
     ld c,a
@@ -535,9 +535,9 @@ animateTilesLoop:
 
 	ld a,c
 	and %00011111		; bereken sx
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
     ld (animsx),a
 
     inc hl
@@ -562,17 +562,4 @@ animateResetTile
     ld (hl),a
     ret
 
-mapMoveLeft:
-    db 128,129,130,131
-    db 132,133,134,135
-    db 136,137,138,139
-    db 255
-mapMoveRight:
-    db 140,141,142,143
-    db 144,145,146,147
-    db 148,149,150,151
-    db 255
-mapBreakFloor:
-    db 184,185,186,187,188,189,190,191
-    db 255
 

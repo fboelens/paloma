@@ -4,7 +4,7 @@ memload_titlescreen:
     ld a,:img_title+1
     ld (ROM_SelectPage3b),a
 
-    ld a,0
+    xor a
     ld  hl,0
     call SetVramWrite
 
@@ -21,7 +21,7 @@ memload_ending:
     ld a,:img_ending+1
     ld (ROM_SelectPage3b),a
 
-    ld a,0
+    xor a
     ld  hl,0
     call SetVramWrite
 
@@ -38,7 +38,7 @@ memload_logo:
     ld a,:img_logo+1
     ld (ROM_SelectPage3b),a
 
-    ld a,0
+    xor a
     ld  hl,0
     call SetVramWrite
 
@@ -484,7 +484,7 @@ setWorld5:
 
 skipStage:
     ld a,(playerStage)
-    cp 0
+    or a
     ret z
     ld b,a
     ld de,mapLength

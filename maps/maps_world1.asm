@@ -39,7 +39,7 @@ maps_world1:
 
     ; finished
     incbin "world1/paloma1-2f.pal"
-    db 2,16 ; player position
+    db 2,17 ; player position
     db 15,7,   0,left,5,false;  enemy 1
     db 16,10,   1,left,1,false ;  enemy 2
     db 20,2,   1,down,2,false ; enemy 3
@@ -61,7 +61,7 @@ maps_world1:
 
     ; finished
     incbin "world1/paloma1-4f.pal"
-    db 1,16 ; player position
+    db 1,18 ; player position
     db 16,12,   0,right,5,false;  enemy 1
     db 24,15,   2,left,7,false ;  enemy 2
     db 20,1,   1,right,1,false ; enemy 3

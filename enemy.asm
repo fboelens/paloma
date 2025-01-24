@@ -2,7 +2,7 @@ enemyMovement:
     
 enemyMovement.E1:
     ld a,(enemy1AI)
-    cp 0
+    or a
     jp z,enemyMovement.E2
     ld hl,(spritePositionEnemy1)
     ld iy,enemy1Direction
@@ -10,9 +10,9 @@ enemyMovement.E1:
     ld e,1
     call enemyMovement1
 
-    ld ix,spriteColors+32
+    ld ix,$7400+32
     ld (spriteColorsSource),ix
-    ld ix,spriteData+64
+    ld ix,$7800+64
     ld (spriteDataSource),ix
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy1
@@ -21,7 +21,7 @@ enemyMovement.E1:
 
 enemyMovement.E2:
     ld a,(enemy2AI)
-    cp 0
+    or a
     jp z,enemyMovement.E3
     ld hl,(spritePositionEnemy2)
     ld iy,enemy2Direction
@@ -29,9 +29,9 @@ enemyMovement.E2:
     ld e,2
     call enemyMovement1
 
-    ld ix,spriteColors+64
+    ld ix,$7400+32+32
     ld (spriteColorsSource),ix
-    ld ix,spriteData+128
+    ld ix,$7800+64+64
     ld (spriteDataSource),ix
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy2
@@ -40,7 +40,7 @@ enemyMovement.E2:
 
 enemyMovement.E3:    
     ld a,(enemy3AI)
-    cp 0
+    or a
     jp z,enemyMovement.E4
     ld hl,(spritePositionEnemy3)
     ld iy,enemy3Direction
@@ -48,9 +48,9 @@ enemyMovement.E3:
     ld e,3
     call enemyMovement1
 
-    ld ix,spriteColors+96
+    ld ix,$7400+32+64
     ld (spriteColorsSource),ix
-    ld ix,spriteData+192
+    ld ix,$7800+64+128
     ld (spriteDataSource),ix
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy3
@@ -59,7 +59,7 @@ enemyMovement.E3:
 
 enemyMovement.E4:
     ld a,(enemy4AI)
-    cp 0
+    or a
     jp z,enemyMovement.E5
     ld hl,(spritePositionEnemy4)
     ld iy,enemy4Direction
@@ -67,9 +67,9 @@ enemyMovement.E4:
     ld e,4
     call enemyMovement1
 
-    ld ix,spriteColors+128
+    ld ix,$7400+32+96
     ld (spriteColorsSource),ix
-    ld ix,spriteData+256
+    ld ix,$7800+64+192
     ld (spriteDataSource),ix
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy4
@@ -78,18 +78,19 @@ enemyMovement.E4:
 
 enemyMovement.E5:
     ld a,(enemy5AI)
-    cp 0
+    or a
     jp z,enemyMovement.E6
     ld hl,(spritePositionEnemy5)
     ld iy,enemy5Direction
     ld ix,spritePositionEnemy5
     ld e,5
     call enemyMovement1
-    
-    ld ix,spriteColors+160
+
+    ld ix,$7400+32+128
     ld (spriteColorsSource),ix
-    ld ix,spriteData+320
+    ld ix,$7800+64+256
     ld (spriteDataSource),ix
+
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy5
     ld de,(enemy5Number)
@@ -97,7 +98,7 @@ enemyMovement.E5:
 
 enemyMovement.E6:
     ld a,(enemy6AI)
-    cp 0
+    or a
     jp z,enemyMovement.end
     ld hl,(spritePositionEnemy6)
     ld iy,enemy6Direction
@@ -105,9 +106,9 @@ enemyMovement.E6:
     ld e,6
     call enemyMovement1
 
-    ld ix,spriteColors+192
+    ld ix,$7400+32+160
     ld (spriteColorsSource),ix
-    ld ix,spriteData+384
+    ld ix,$7800+64+320
     ld (spriteDataSource),ix
     ld hl,(enemyMovePointer)
     ld ix,spritePositionEnemy6
@@ -122,7 +123,7 @@ enemyMovement1:
     ld c,a
     ; enemy wait
     ld a,(iy+3)
-    cp 0
+    or a
     jp nz,enemyWaitState
     ld a,c
 
@@ -182,11 +183,11 @@ updateEnemyMovement:
     cp 5
     ret nz
 
-    ld a,0
+    xor a
     ld (iy+5),a
 updateEnemyMovement2:
     ld a,(iy+2) ; enemy dood?
-    cp 0
+    or a
     jp nz,enemyDead
 
     ld a,(hl)
@@ -230,8 +231,7 @@ enemyMovePointerReset:
 
 enemyMovementAI1:
     ; check right
-    ld d,16
-    ld e,9
+    ld de,((9) & #00ff) + ((16) << 8)
     add hl,de
     call checkTileEnemy
     call checkObjectSurroundingsBlocker
@@ -240,8 +240,7 @@ enemyMovementAI1:
     ld l,(ix)
     ld h,(ix+1)
     ; check left
-    ld d,0
-    ld e,9
+    ld de,((9) & #00ff) + ((0) << 8)
     add hl,de
     call checkTileEnemy
     call checkObjectSurroundingsBlocker
@@ -256,8 +255,7 @@ enemyMovementAI2:
     ; check up
     dec h
     dec h
-    ld d,8
-    ld e,0
+    ld de,((0) & #00ff) + ((8) << 8)    
     add hl,de
     call checkTileEnemy
     call checkPlayerSurroundingsFallBlocker
@@ -266,8 +264,7 @@ enemyMovementAI2:
 
     ld l,(ix)
     ld h,(ix+1)
-    ld d,8
-    ld e,16
+    ld de,((16) & #00ff) + ((8) << 8)    
     add hl,de
     call checkTileEnemy
     call checkPlayerSurroundingsFallBlocker
@@ -276,25 +273,22 @@ enemyMovementAI2:
     jp enemyMovement2
 
 enemyMovementAI8:
-    call enemyMovementAI2
-    ret
+    jp enemyMovementAI2
 
 enemyMovementAI11:
-    call enemyMovementAI1
-    ret
+    jp enemyMovementAI1
 
 enemyMovementAI3:
     ld a,(keysLeft)
-    cp 0
+    or a
     ret nz
     jp enemyMovementAI1
 
 enemyMovementAI4:
     ld a,(keysLeft)
-    cp 0
+    or a
     ret nz
-    call enemyMovementAI2
-    ret
+    jp enemyMovementAI2
 
 enemyMovementAI5:
     ; check floortype
@@ -352,7 +346,7 @@ enemyMovementAI7:
     ld b,a
     ld a,(py)
     sub b
-    cp 0 ; equal height?
+    or a ; equal height?
     ld a,false 
     jp nz,enemyMovementAI7.continue ; if not, goto normal pace
     
@@ -437,7 +431,7 @@ enemyMovementAIBoss:
     ret
 
 .newAIBoss:
-    ld a,0
+    xor a
     ld (bossMoveCounter),a
 
     ld hl,(bossMovePointer)
@@ -472,7 +466,7 @@ enemyMovementAIBubble:
     ld a,(hl)
     dec a
     ld (hl),a
-    cp 0
+    or a
     call z,enemyMovementAIBubble2
     dec (ix+1)    
     dec (ix+5)
@@ -480,7 +474,7 @@ enemyMovementAIBubble:
     dec (ix+5)
 
     ld a,(ix+1)
-    cp 0
+    or a
     call z,enemyDeadEnd
     pop hl
     ret
@@ -492,7 +486,7 @@ enemyMovementAIBubble2:
     dec (ix+4)
 
     ld a,(ix)
-    cp 0
+    or a
     call z,enemyDeadEnd
 
     push hl
@@ -506,7 +500,7 @@ enemyMovementAIBubble2:
 
 changeEnemyDirection:
     ld a,(iy+3); ai state
-    cp 0
+    or a
     jp nz,changeEnemyDirection2
     
     ld a,r
@@ -676,7 +670,7 @@ enemyShoot:
 
     call Div8
 
-    cp 0
+    or a
     call z,enemyShoot2
     ld (iy),a
     ld (iy+6),a ; bubbleDiv2
@@ -786,8 +780,8 @@ checkTileEnemy:
 ; hl points to enemyXDead
 killEnemy:
     ld a,(hl)
-    cp true
-    ret z ; enemy already dying
+    or a
+    ret nz ; enemy already dying
 
     ld a,true
     ld (hl),a
@@ -806,9 +800,8 @@ enemyDead:
     cp 8
     ld (iy+2),a
     jp z,enemyDeadEnd
-
     and %00000011
-    cp 0
+    or a
     jp z,enemyDeadExplosion1
     cp 1
     jp z,enemyDeadExplosion2
@@ -816,10 +809,11 @@ enemyDead:
     jp z,enemyDeadExplosion3
     cp 3
     jp z,enemyDeadExplosion2
+
     ret
     
 enemyDeadEnd:
-    ld a,0
+    xor a
     ld (iy+1),a ; enemyAI  resetten, echt dood
 
     ld a,212
@@ -830,43 +824,55 @@ enemyDeadEnd:
 
 enemyDeadExplosion1:
     push hl
-    ld hl,spriteColorsExplosion
-    ld bc,32
-    ld de,(spriteColorsSource) ; calculate correct target depending on enemy nr
-    ldir
 
-    ld hl,spriteDataExplosion
-    ld bc,64
-    ld de,(spriteDataSource) ; calculate correct target depending on enemy nr
-    ldir
+    ld a,3
+    ld hl,(spriteColorsSource)
+    call SetVramWrite
+    ld hl,spriteColorsExplosion
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
+
+    ld a,3
+    ld hl,(spriteDataSource)
+    call SetVramWrite
+    ld  hl,spriteDataExplosion
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     pop hl
     ret
 
 enemyDeadExplosion2:
-    push hl
+    ld a,3
+    ld hl,(spriteColorsSource)
+    call SetVramWrite
     ld hl,spriteColorsExplosion+32
-    ld bc,32
-    ld de,(spriteColorsSource) ; calculate correct target depending on enemy nr
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
-    ld hl,spriteDataExplosion+64
-    ld bc,64
-    ld de,(spriteDataSource) ; calculate correct target depending on enemy nr
-    ldir
+    ld a,3
+    ld hl,(spriteDataSource)
+    call SetVramWrite
+    ld  hl,spriteDataExplosion+64
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     pop hl
     ret
 
 enemyDeadExplosion3:
     push hl
+    ld a,3
+    ld hl,(spriteColorsSource)
+    call SetVramWrite
     ld hl,spriteColorsExplosion+64
-    ld bc,32
-    ld de,(spriteColorsSource) ; calculate correct target depending on enemy nr
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
-    ld hl,spriteDataExplosion+128
-    ld bc,64
-    ld de,(spriteDataSource) ; calculate correct target depending on enemy nr
-    ldir
+    ld a,3
+    ld hl,(spriteDataSource)
+    call SetVramWrite
+    ld  hl,spriteDataExplosion+128
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     pop hl
     ret
 

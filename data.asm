@@ -1,4 +1,5 @@
 dataStart: #0
+test: #2
 
 ; title and options
 wavePointer: #2
@@ -167,6 +168,10 @@ dataPalette: #32
 currentTileX: #1
 currentTileY: #1
 breakDownFloorCounter #1
+playerFalling: #1
+playerLeftBlocked: #1
+playerRightBlocked: #1
+playerDownBlocked: #1
 
 animationPos: #2
 
@@ -208,13 +213,13 @@ playerOnPlatform: #1
 playerOnPlatform2: #1
 platform1Wait: #1
 platform2Wait: #1
-playerFall: #1
+;playerFall: #1
 
 ; is a way blocking for the player?
-leftBlocked: #1
-rightBlocked: #1
-upBlocked: #1
-downBlocked: #1
+;leftBlocked: #1
+;rightBlocked: #1
+;upBlocked: #1
+;downBlocked: #1
 
 playerDirection: #1 ; left or right
 
@@ -320,6 +325,8 @@ platform2Move: #1
 spriteColorsSource: #2
 spriteDataSource: #2
 
+textbar: #72
+
 spritePositionPlayer: #0
 py:	#1
 px: #7
@@ -332,17 +339,13 @@ spritePositionEnemy5: #8
 spritePositionEnemy6: #8 
 spritePositionBox: #8
 spritePositionHelp: #16
-spriteData: #64
-spriteDataEnemie: #384
-spriteColors: #32
-spriteColorsEnemie: #192
 spritePositionHand: #8
 
 txt_pass: #7
 txt_pass_position: #1
 txt_pass_input: #4
 
-textbar: #72
+tempEnemyY: #1
 
 decompressSpace: #0
 animationSpace: #1024

@@ -1,6 +1,11 @@
 ; player movement based on keys and gravity
 playerMovement:
-    call checkPlayerSurroundings
+    ld a,false
+    ld (playerLeftBlocked),a
+    ld (playerRightBlocked),a    
+    ld (playerDownBlocked),a
+    ld (playerOnPlatform),a
+    ld (playerOnPlatform2),a
 
     call checkJoyStick
 
@@ -53,11 +58,12 @@ iceMoveLeft:
     ld a,(playerIceLeft)
     cp 0
     ret z
+    cp 255
+    jp z,resetIce
 
     ; ice move left
     ld a,(playerIceLeft)
-    dec a
-    dec a
+    add a,-2
     ld (playerIceLeft),a
 
     jp playerLeft
@@ -74,10 +80,11 @@ iceMoveRight:
     ld a,(playerIceRight)
     cp 0
     ret z
+    cp 255
+    jp z,resetIce
 
     ld a,(playerIceRight)
-    dec a
-    dec a
+    add a,-2
     ld (playerIceRight),a
 
     jp playerRight
@@ -108,29 +115,31 @@ playerMovementReverse:
 
 playerLeft:
     ld a,(playerIceRight)
-    cp 0
+    or a
     jp nz,playerLeft.2
+
+    ; check linksmidden
+    ld hl,(spritePositionPlayer)
+    ld de,((6) & #00ff) + ((2) << 8)
+    add hl,de
+    call checkTile
+    call checkPlayerSurroundingsBlocker
+    ret z
 
     ; check linksboven
     ld hl,(spritePositionPlayer)
-    ld d,2
-    ld e,7
+    ld de,((10) & #00ff) + ((2) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
-    call z,blockLeft
+    ret z
 
     ; check linksonder
     ld hl,(spritePositionPlayer)
-    ld d,2
-    ld e,15
+    ld de,((15) & #00ff) + ((2) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
-    call z,blockLeft
-
-    ld a,(leftBlocked)
-    cp true
     ret z
 
     ld a,left
@@ -139,7 +148,10 @@ playerLeft:
     ; box move?
     ld ix,spritePositionPlayer
     call BoxCollisionCheck
-    jp c,setBoxLeft
+    call c,setBoxLeft
+    ld a,(playerLeftBlocked)
+    dec a
+    ret z
 
     ld a,(spritePositionPlayer+1)
     dec a    
@@ -180,7 +192,7 @@ playerLeft.2:
     ld a,(playerMoveCounter)
     cp 4
     ret nz
-    ld a,0
+    xor a
     ld (playerMoveCounter),a
     ld hl,playerMovePointer
     inc (hl)
@@ -191,29 +203,31 @@ playerLeft.3:
 
 playerRight:
     ld a,(playerIceLeft)
-    cp 0
+    or a
     jp nz,playerRight.2
 
     ; check rechtboven
     ld hl,(spritePositionPlayer)
-    ld d,14
-    ld e,7
+    ld de,((6) & #00ff) + ((14) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
-    call z,blockRight
+    ret z
+
+    ; check rechtboven
+    ld hl,(spritePositionPlayer)
+    ld de,((10) & #00ff) + ((14) << 8)
+    add hl,de
+    call checkTile
+    call checkPlayerSurroundingsBlocker
+    ret z
 
     ; check rechtsonder
     ld hl,(spritePositionPlayer)
-    ld d,14
-    ld e,15
+    ld de,((15) & #00ff) + ((14) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
-    call z,blockRight
-
-    ld a,(rightBlocked)
-    cp true
     ret z
 
     ld a,right
@@ -222,7 +236,10 @@ playerRight:
     ; box move?
     ld ix,spritePositionPlayer
     call BoxCollisionCheck
-    jp c,setBoxRight
+    call c,setBoxRight
+    ld a,(playerRightBlocked)
+    dec a
+    ret z
 
     ld a,(spritePositionPlayer+1)
     inc a
@@ -263,7 +280,7 @@ playerRight.2:
     ld a,(playerMoveCounter)
     cp 4
     ret nz
-    ld a,0
+    xor a
     ld (playerMoveCounter),a
 
     ld hl,playerMovePointer
@@ -283,44 +300,31 @@ playerMove:
     db 0,32,64,32,255
 
 playerDown:
-    ld a,(downBlocked)
-    cp true
-    ret z
-
-    ld a,(playerOnPlatform)
-    ret z
-    ld a,(playerOnPlatform2)
-    ret z
-
     ld a,(playerJumpBoolean)
     cp true
     ret z
 
-    ; on box
-    ld ix,spritePositionPlayer
-    call BoxCollisionCheckTop
-    jp nc,playerDown2
+    call checkDown
+    ld a,(playerDownBlocked)
+    cp true
+    ret z
+    ld a,(playerOnPlatform)
+    cp true 
+    ret z
+    ld a,(playerOnPlatform2)
+    cp true 
+    ret z
+  
 
-    ld a,(spritePositionBox)
-    ld b,a
-    ld a,(spritePositionPlayer)
-    sub b
-    jp c,blockDown
-    
 playerDown2:
+    ld a,true
+    ld (playerFalling),a
 
     ld a,(spritePositionPlayer)
-    ld c,a
-    ld a,(playerFall)
-    add a,c
+    add a,4
+    or %00000011
     ld (spritePositionPlayer),a
     ld (spritePositionPlayer+4),a
-
-    ld a,true
-    ld (upBlocked),a
-
-    ld a,4
-    ld (playerFall),a
 
     ret
 
@@ -336,8 +340,8 @@ playerUp:
     cp false
     ret nz
 
-    ld a,(upBlocked)
-    cp true
+    ld a,(playerFalling)
+    dec a
     ret z
 
     ld a,true
@@ -349,28 +353,36 @@ playerUp:
 
 playerJumpSpriteLeft:
     ; jump to left sprite
-    ld hl,spriteDataPlayerJumpLeft
-    ld bc,64
-    ld de,spriteData
-    ldir
-
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsPlayerJumpRight
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
+
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataPlayerJumpLeft
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     ret
 
 playerJumpSpriteRight:
     ; jump to right sprite
-    ld hl,spriteDataPlayerJumpRight
-    ld bc,64
-    ld de,spriteData
-    ldir
-
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsPlayerJumpRight
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)    
+    otir
+
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataPlayerJumpRight
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
     ret
 
 playerJump:
@@ -380,49 +392,42 @@ playerJump:
     ld ( playerJumpPosition),hl
     cp 128
     jp z,playerJumpReset
-    ld b,a
-    ld a,(upBlocked)
-    cp true
+
+    ; check linksboven voor springen
+    ld hl,(spritePositionPlayer)
+    ld de,((4) & #00ff) + ((4) << 8)
+    add hl,de
+    call checkTile
+    call checkPlayerSpecialTiles
+    call checkPlayerSurroundingsBlocker
     ret z
 
+    ; check middenboven voor springen
+    ld hl,(spritePositionPlayer)
+    ld de,((4) & #00ff) + ((8) << 8)
+    add hl,de
+    call checkTile
+    call checkPlayerSurroundingsBlocker
+    ret z
+
+    ; check rechtsboven voor springen
+    ld hl,(spritePositionPlayer)
+    ld de,((4) & #00ff) + ((12) << 8)
+    add hl,de
+    call checkTile
+    call checkPlayerSpecialTiles
+    call checkPlayerSurroundingsBlocker
+    ret z
+
+
+    ld hl,(playerJumpPosition)
+    dec hl
+    ld b,(hl)
     ld a,(spritePositionPlayer)
     add b
     ld (spritePositionPlayer),a
     ld (spritePositionPlayer+4),a
 
-; stop jumproutine if player is on floor tile
-playerJumpEnd:
-    ld a,(py)
-    inc a
-    inc a
-    and %00000111
-    cp 0
-    ld a,(hl)
-    ret z
-    
-    push hl
-    ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsFallBlocker
-    pop hl
-    ld a,255
-    ret z
-
-    push hl
-    ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
-    ld a,255
-    ret z
-
-    ld a,(hl)
     ret
 
 playerJumpReset:
@@ -435,77 +440,134 @@ playerJumpReset:
     cp left
     jp z,playerJumpReset2
 
-    ld hl,spriteDataPlayer+64
-    ld bc,64
-    ld de,spriteData
-    ldir
-
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsPlayer+32
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataPlayer+64
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     ret
 
 playerJumpReset2
-    ld hl,spriteDataPlayer+256
-    ld bc,64
-    ld de,spriteData
-    ldir
-
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsPlayer+32
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataPlayer+256
+	ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     ret
 
 playerJumpTable:
     ;db -4,-4,-4,-4,-4,-2,-2,-2,-2,0,0,0,0,0,0,0,0,0,128 ; 30
-    db -4,-4,-4,-4,-4,-2,-2,-2,-2,-2,0,0,0,0,2,2,128
+    db -4,-4,-4,-4,-4,-2,-2,-2,-2,-1,-1,0,0,0,0,0,0,128
 
-; do all surrounding tile checks
-checkPlayerSurroundings:
-    ld a,false
-    ld (leftBlocked),a
-    ld (rightBlocked),a
-    ld (upBlocked),a
-    ld (downBlocked),a
-
-    ld a,(py)
-    inc a
-    and %00000011
-    ld c,a
-    ld a,4
-    sub c
-    ld (playerFall),a
-
-
-checkPlayerSurroundings1:
-    ld a,(playerJump)
-    cp true
-    jp z,checkPlayerSurroundings2
-
-    ; only check falling tiles if player is directly on one of them tiles
-    ld a,(py)
+checkDown:
+    ld a,(spritePositionPlayer)
     inc a
     and %00000111
-    cp 0
-    jp nz,checkPlayerSurroundings2
+    or a
+    jp nz,checkDown3
+
+    ld a,(playerFalling)
+    cp false
+    jp z,checkDown2
+
+    ld a,false
+    ld (playerFalling),a
+
+checkDown2:
+    
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((4) << 8)
+    add hl,de
+    call checkTile
+    sub 140
+    cp 12
+    jp c,autoMovePlayerRight
+
+    ; check rechtsonder voor lopende band rechts
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((12) << 8)
+    add hl,de
+    call checkTile
+    sub 140
+    cp 12
+    jp c,autoMovePlayerRight
+
+    ; check linksonder voor lopende band links
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((4) << 8)
+    add hl,de
+    call checkTile
+    sub 128
+    cp 12
+    or a
+    jp c,autoMovePlayerLeft
+
+    ; check rechtsonder voor lopende band links
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((12) << 8)
+    add hl,de
+    call checkTile
+    sub 128
+    cp 12
+    jp c,autoMovePlayerLeft
+
+    ; check linksonder voor brekende vloer
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((4) << 8)    
+    add hl,de
+    call checkTile
+    ld c,a
+    and %11111000
+    cp 184
+    call z,breakDownFloor
+
+    ; check rechtsonder voor brekende vloer
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((12) << 8)
+    add hl,de
+    call checkTile
+    ld c,a
+    and %11111000
+    cp 184
+    call z,breakDownFloor
+
+    ; check middenonder voor brekende vloer
+    ld hl,(spritePositionPlayer)
+    ld de,((18) & #00ff) + ((8) << 8)    
+    add hl,de
+    call checkTile
+    ld c,a
+    and %11111000
+    cp 184
+    call z,breakDownFloor
 
     ; check linksonder voor vallen
     ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,18
+    ld de,((18) & #00ff) + ((4) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsFallBlocker
-    call z,blockDown
+    call z,blockPlayerDown
 
     ; check middenonder voor vallen
     ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,18
+    ld de,((18) & #00ff) + ((8) << 8)
     add hl,de
     call checkTile
     ld c,a
@@ -514,200 +576,94 @@ checkPlayerSurroundings1:
     call z,resetIce
     ld a,c
     call checkPlayerSurroundingsFallBlocker
-    call z,blockDown
-
+    call z,blockPlayerDown
 
     ; check rechtsonder voor vallen
     ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,18
+    ld de,((18) & #00ff) + ((12) << 8)    
     add hl,de
     call checkTile
     call checkPlayerSurroundingsFallBlocker
-    call z,blockDown
+    call z,blockPlayerDown
 
-    ; check linksonder voor lopende band links
-    ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsMoveLeft
-    push af
-    call z,autoMovePlayerLeft
-    pop af
+checkDown3:
+    call checkPlayerOnPlatform
 
-    ; check rechtsonder voor lopende band links
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsMoveLeft
-    push af
-    call z,autoMovePlayerLeft
-    pop af
+    ld a,(playerDownBlocked)
+    cp true
+    ret z
 
-    ; check linksonder voor lopende band rechts
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsMoveRight
-    push af
-    call z,autoMovePlayerRight
-    pop af
+    ; on box
+    ld ix,spritePositionPlayer
+    call BoxCollisionCheckTop
+    ret nc
 
-    ; check rechtsonder voor lopende band rechts
-    ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,18
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsMoveRight
-    push af
-    call z,autoMovePlayerRight
-    pop af
+    ld a,(spritePositionBox)
+    ld b,a
+    ld a,(spritePositionPlayer)
+    sub b
+    jp c,blockPlayerDown
 
-    ; check linksonder voor brekende vloer
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,18
-    add hl,de
-    call checkTile
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
-    call z,breakDownFloor
+    ret
 
-    ; check rechtsonder voor brekende vloer
-    ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,18
-    add hl,de
-    call checkTile
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
-    call z,breakDownFloor
+blockPlayerLeft:
+    ld a,true
+    ld (playerLeftBlocked),a
+    ret
 
-    ; check middenonder voor brekende vloer
-    ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,18
-    add hl,de
-    call checkTile
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
-    call z,breakDownFloor
+blockPlayerRight:
+    ld a,true
+    ld (playerRightBlocked),a
+    ret
+
+blockPlayerDown:
+    ld a,true
+    ld (playerDownBlocked),a
+    ret
 
 
-checkPlayerSurroundings2:
-    ; check linksboven voor springen
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,4
-    add hl,de
-    call checkTile
-    call checkPlayerSpecialTiles
-    call checkPlayerSurroundingsBlocker
-    call z,blockUp
-
-    ; check middenboven voor springen
-    ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,4
-    add hl,de
-    call checkTile
-    call checkPlayerSurroundingsBlocker
-    call z,blockUp
-
-    ; check rechtsboven voor springen
-    ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,4
-    add hl,de
-    call checkTile
-    call checkPlayerSpecialTiles
-    call checkPlayerSurroundingsBlocker
-    call z,blockUp
-
-    ; check op deur en dodelijke tiles
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,2
-    add hl,de
-    call checkTile
-    cp tile_door
-    call z,checkLevelComplete
-
-    ld hl,(spritePositionPlayer)
-    ld d,8
-    ld e,12
-    add hl,de
-    call checkTile
-    call checkPlayerSpecialTiles
-
-    ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,12
-    add hl,de
-    call checkTile
-    call checkPlayerSpecialTiles
-
-    ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,12
-    add hl,de
-    call checkTile
-    call checkPlayerSpecialTiles
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-    ; player on platform?
-    ld a,false
-    ld (playerOnPlatform),a
-    ld (playerOnPlatform2),a
-
+checkPlayerOnPlatform:
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
     ; left/right platform
     ld a,(platform1Y)
-    cp 0
-    jp z,checkPlayerSurroundings3
+    or a
+    jp z,checkPlayerOnPlatform2
     sub 17
     ld c,a
     ld a,(py)
     sub c
-    jp nz,checkPlayerSurroundings3
+    jp nz,checkPlayerOnPlatform2
 
     ld ix,platform1X
     call PlatformCollisionCheck
-    jp nc,checkPlayerSurroundings3
-
-    call blockDown
+    jp nc,checkPlayerOnPlatform2
+    
     ld a,true
     ld (playerOnPlatform),a
+    ret
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ; player on platform up/down
-checkPlayerSurroundings3:
+checkPlayerOnPlatform2:
     ld a,(platform2Move)
     cp up
-    jp z,checkPlayerSurroundings4
-    
-    ld a,(downBlocked)
+    jp z,checkPlayerOnPlatform3
+
+    ld a,(playerDownBlocked)
     cp true
     ret z
-
-checkPlayerSurroundings4:
+    
+checkPlayerOnPlatform3:
     ld a,(platform2Y)
-    cp 0
+    or a
     ret z
-    sub 19
+
     ld c,a
     ld a,(py)
+    add 18
     sub c
     and %11111000
-    cp 0
+    or a
     ret nz
 
     ld ix,platform2X
@@ -715,14 +671,12 @@ checkPlayerSurroundings4:
     ret nc
 
     ld a,(platform2Y)
-    sub 17
+    sub 16
     ld (spritePositionPlayer),a
     ld (spritePositionPlayer+4),a
 
-    call blockDown
     ld a,true
     ld (playerOnPlatform2),a
-
     ret
 
 ; checks the tiles around the object
@@ -743,7 +697,7 @@ checkTile:
     ld (currentTileY),a        
 
     ld e,a
-    ld d,0
+    ;ld d,0
 
     sla e
     rl d
@@ -825,33 +779,9 @@ checkPlayerSpecialTiles:
     ret
 
 resetIce:
-    ld a,0
+    xor a
     ld (playerIceLeft),a
     ld (playerIceRight),a
-    ret
-
-; block a way for the player because of the tiles
-blockUp:
-    ld a,true
-    ld (upBlocked),a
-    ret
-blockDown:
-    ld a,true
-    ld (downBlocked),a
-    ret
-blockLeft:
-    ld a,0
-    ld (playerIceLeft),a
-
-    ld a,true
-    ld (leftBlocked),a
-    ret
-blockRight:
-    ld a,0
-    ld (playerIceRight),a
-
-    ld a,true
-    ld (rightBlocked),a
     ret
 
 playerCollision:
@@ -874,7 +804,7 @@ playerCollision:
 ;-------------------------------------
 checkLevelComplete
     ld a,(keysLeft)
-    cp 0
+    or a
     call z,setLevelComplete
     ld a,tile_door
     ret
@@ -902,7 +832,8 @@ openDoor:
 
     ld hl,(colorSetPointer)
     call SetColor
-    
+
+    ; fireballs kill
     ld hl,enemy2Dead    
     call killEnemy
     ld hl,enemy3Dead    
@@ -935,7 +866,7 @@ doLevelCompleted:
     call replay_fade_out
 
     ld a,(spritePositionPlayer)
-    sub 2
+    sub 4
     ld (spritePositionPlayer),a
     ld (spritePositionPlayer+4),a    
 
@@ -945,7 +876,14 @@ doLevelCompleted:
     call killAllEnemies
 
 doLevelCompleted2:
-
+    ld a,(option_dif)
+    cp 3
+    jp nc,doLevelCompleted4
+    
+    call setPlayerLife2
+    ld b,50
+    call wait
+doLevelCompleted4:
     ld de,(colorSetPointer)
     ld hl,blackPalette
     call colorFader
@@ -991,7 +929,7 @@ doLevelCompleted3:
     call betweenWorlds
 
     ; new world
-    ld a,0
+    xor a
     ld (playerStage),a
     ld a,(playerWorld)
     inc a
@@ -1049,11 +987,11 @@ doPlayerInvisible2:
     jp SetColor
 
 setPlayerInvincible:
-    ld a,0
+    xor a
     ld (hl),a
     call replaceTileDefault
 
-    ld a,0
+    xor a
     ld (isrInvincible),a
 
     ld a,true
@@ -1071,10 +1009,11 @@ setPlayerUnInvincible:
 ; extra live
 ;-------------------------------------
 setPlayerLife:
-    ld a,0
+    xor a
     ld (hl),a
     call replaceTileDefault
 
+setPlayerLife2:
     ld	bc,sfx_heart
     call	ttsfx_start
 
@@ -1095,14 +1034,14 @@ doPlayerReverse:
     ret
 
 setPlayerReverse:
-    ld a,0
+    xor a
     ld (hl),a
     call replaceTileDefault
 
     ld bc,sfx_reverse
     call ttsfx_start
 
-    ld a,0
+    xor a
     ld (isrReverse),a
 
     ld a,true
@@ -1118,7 +1057,7 @@ setPlayerUnReverse:
 ; keys
 ;-------------------------------------
 setKeyfound:
-    ld a,0
+    xor a
     ld (hl),a
     call replaceTileDefault
     
@@ -1128,7 +1067,7 @@ setKeyfound:
     ld hl,keysLeft
     dec (hl)
     ld a,(hl)
-    cp 0
+    or a
     call z,openDoor
 
     call writeKeysFound
@@ -1145,9 +1084,9 @@ replaceTileDefault:
     ld (mapsy),a
 
     ld a,(currentTileX)
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (mapdx),a
     ld (mapsx),a
     ld a,2
@@ -1198,26 +1137,33 @@ setBoxLeft:
     ld a,(spritePositionPlayer)
     dec a
     sub b
-    jp nc,blockLeft
+    jp nc,blockPlayerLeft
+
+    ; and player right of the box
+    ld a,(px)
+    ld c,a
+    ld a,(spritePositionBox+1)
+    sub c
+    ret nc
 
     ; box is blocked
     ld hl,(spritePositionBox)
-    ld d,0
-    ld e,10
+    ld de,((10) & #00ff) + ((0) << 8)
     add hl,de
     dec h
     call checkTileEnemy
     call checkObjectSurroundingsBlocker
-    jp z,blockLeft
+    jp z,blockPlayerLeft
 setBoxLeft2:
     ld a,(boxmoveCounter)
-    cp 0
+    or a
     ret nz
 
     ld a,left
     ld (boxmove),a
     ld a,2
     ld (boxmoveCounter),a
+    or a
     ret
 
 setBoxRight:
@@ -1226,20 +1172,26 @@ setBoxRight:
     ld a,(spritePositionPlayer)
     dec a
     sub b
-    jp nc,blockRight
+    jp nc,blockPlayerRight
+
+    ; and player left of the box
+    ld a,(px)
+    ld c,a
+    ld a,(spritePositionBox+1)
+    sub c
+    ret c
 
     ; box is blocked
     ld hl,(spritePositionBox)
-    ld d,16
-    ld e,10
+    ld de,((10) & #00ff) + ((16) << 8)    
     add hl,de
     call checkTileEnemy
     call checkObjectSurroundingsBlocker
-    jp z,blockRight ; speler mag er ook niet langs
+    jp z,blockPlayerRight ; speler mag er ook niet langs
 
 setBoxRight2
     ld a,(boxmoveCounter)
-    cp 0
+    or a
     ret nz
 
     ld a,right
@@ -1250,76 +1202,71 @@ setBoxRight2
 
 checkBoxUnderGround:
     ld a,(boxmoveCounter)
-    cp 0
+    or a
     ret nz
     ; check linksonder voor lopende band en brekende vloer
     ld hl,(spritePositionBox)
-    ld d,12
-    ld e,18
+    ld de,((18) & #00ff) + ((12) << 8)    
     add hl,de
     call checkTileEnemy
-    call checkPlayerSurroundingsMoveLeft
-    jp z,setBoxLeft2
+    sub 128
+    cp 12
+    jp c,setBoxLeft2
     
     ; check linksonder voor lopende band en brekende vloer
     ld hl,(spritePositionBox)
-    ld d,2
-    ld e,18
+    ld de,((18) & #00ff) + ((2) << 8)    
     add hl,de
     call checkTileEnemy
-    call checkPlayerSurroundingsMoveRight
-    jp z,setBoxRight2
+    sub 140
+    cp 12
+    jp c,setBoxRight2
 
     ld hl,(spritePositionBox)
-    ld d,2
-    ld e,18
+    ld de,((18) & #00ff) + ((2) << 8)    
     add hl,de
     call checkTileEnemy
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
+    ld c,a
+    and %11111000
+    cp 184
     jp z,breakDownFloor
 
     ld hl,(spritePositionBox)
-    ld d,14
-    ld e,18
+    ld de,((18) & #00ff) + ((14) << 8)    
     add hl,de
     call checkTileEnemy
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
+    ld c,a
+    and %11111000
+    cp 184
     jp z,breakDownFloor
 
     ld hl,(spritePositionBox)
-    ld d,8
-    ld e,18
+    ld de,((18) & #00ff) + ((8) << 8) 
     add hl,de
     call checkTileEnemy
-    push hl
-    call checkPlayerSurroundingsBreakFloor
-    pop hl
+    ld c,a
+    and %11111000
+    cp 184
     jp z,breakDownFloor
     jp setBoxDown
 
 setBoxDown:
     ld hl,(spritePositionBox)
-    ld d,0
-    ld e,18
+    ld de,((18) & #00ff) + ((0) << 8)     
     add hl,de
     call checkTileEnemy
     call checkPlayerSurroundingsFallBlocker
     ret z
 
     ld hl,(spritePositionBox)
-    ld d,15
-    ld e,18
+    ld de,((18) & #00ff) + ((15) << 8)     
     add hl,de
     call checkTileEnemy
     call checkPlayerSurroundingsFallBlocker
     ret z
 
     ld a,(boxmoveCounter)
-    cp 0
+    or a
     ret nz
 
     ld a,down
@@ -1334,14 +1281,12 @@ setBoxDown:
 ; player on floor
 ;-------------------------------------
 breakDownFloor:
-    ld c,a
-    call blockDown
     ld a,(breakDownFloorCounter)
     inc a
     ld (breakDownFloorCounter),a
-    cp 10
-    ret nz
-    ld a,0
+    cp 14
+    jp nz,breakDownFloor2
+    xor a
     ld (breakDownFloorCounter),a
     
     ld a,c
@@ -1363,9 +1308,9 @@ breakDownFloor:
 
 	ld a,c
 	and %00011111		; bereken sx
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
 	ld (mapsx),a
 
     di
@@ -1373,43 +1318,45 @@ breakDownFloor:
     ld (mapdy),a
 
     ld a,(currentTileX)
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (mapdx),a
 
     ld hl,maptiles
     call DoCopy
     ei
+breakDownFloor2:
+    ld a,true
+    ld (playerDownBlocked),a
     ret
 
 breakDownFloorBroken:
-    ld a,0 ; vervangende tile    
+    xor a ; vervangende tile    
     ld (hl),a
 
     jp replaceTileDefault
 
 autoMovePlayerLeft:
-    call blockDown
-    jp playerLeft
+    ;call playerLeft
+    ld a,(spritePositionPlayer+1)
+    dec a    
+    ld (spritePositionPlayer+1),a
+    ld (spritePositionPlayer+5),a
+
+    ld a,true
+    ld (playerDownBlocked),a
+    ret
 
 autoMovePlayerRight:
-    call blockDown
-    jp playerRight    
+    ;call playerRight    
+    ld a,(spritePositionPlayer+1)
+    inc a    
+    ld (spritePositionPlayer+1),a
+    ld (spritePositionPlayer+5),a
 
-; check if player is on a breaking floor
-checkPlayerSurroundingsBreakFloor:
-    ld hl,mapBreakFloor
-checkPlayerSurroundingsBreakFloorLoop
-    cp (hl)
-    ret z   ; blokkade gevonden, geeft dit terug
-    inc hl
-    ld c,a
-    ld a,(hl)
-    cp 255
-    ld a,c
-    jp nz, checkPlayerSurroundingsBreakFloorLoop
-    cp 254
+    ld a,true
+    ld (playerDownBlocked),a
     ret
 
 ; check if a player is being blocked by a tile (tile 64-127) 
@@ -1449,40 +1396,6 @@ checkObjectSurroundingsBlocker:
     cp 128
     ret
 
-; check if a player is on a bandwagon to the left
-checkPlayerSurroundingsMoveLeft:
-    ld hl,mapMoveLeft
-checkPlayerSurroundingsMoveLeftLoop:
-    cp (hl)
-    ret z
-    inc hl
-    ld c,a
-    ld a,(hl)
-    cp 255
-    ld a,c
-    jp nz, checkPlayerSurroundingsMoveLeftLoop
-    cp 254
-    ret
-
-; check if a player is on a bandwagon to the right
-checkPlayerSurroundingsMoveRight:
-    ld hl,mapMoveRight
-checkPlayerSurroundingsMoveRightLoop:
-    cp (hl)
-    ret z
-    inc hl
-    ld c,a
-    ld a,(hl)
-    cp 255
-    ld a,c
-    jp nz, checkPlayerSurroundingsMoveRightLoop
-    cp 254
-    ret
-
-
-
-
-
 ;-------------------------------------
 ; player dead
 ;-------------------------------------
@@ -1519,54 +1432,70 @@ playerDead:
 playerDeadAnimation:
     push bc
 
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsExplosion
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)    
+    otir
 
-    ld hl,spriteDataExplosion
-    ld bc,64
-    ld de,spriteData
-    ldir
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataExplosion
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
 
     ld b,3
     call wait
 
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsExplosion+32
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)    
+    otir
 
-    ld hl,spriteDataExplosion+64
-    ld bc,64
-    ld de,spriteData
-    ldir
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataExplosion+64
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
 
     ld b,3
     call wait
 
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsExplosion+64
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)    
+    otir
 
-    ld hl,spriteDataExplosion+128
-    ld bc,64
-    ld de,spriteData
-    ldir
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataExplosion+128
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
 
     ld b,3
     call wait
 
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsExplosion+32
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
-    ld hl,spriteDataExplosion+64
-    ld bc,64
-    ld de,spriteData
-    ldir
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataExplosion+64
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
 
     ld b,3
     call wait
@@ -1577,16 +1506,20 @@ playerDeadAnimation:
     ld a,4
     call replay_fade_out
 
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
     ld hl,spriteColorsRIP
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)    
+    otir
 
-    ld hl,spriteDataRIP
-    ld bc,64
-    ld de,spriteData
-    ldir
-
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataRIP
+    ld bc,((#98) & #00ff) + ((64) << 8)    
+    otir
+    
 playerDeadWait:
     halt
     call checkTrigger
@@ -1705,8 +1638,7 @@ PlatformCollisionCheck:
         ld      a,(ix)    ; read enemy x-coordinate           [21]
         ld      e,20    ; set the width of the enemy        [21]
 
-        call    .check  ;                                   [18]
-        ret     
+        ;jp    .check  ;                                   [18]
 
 .check:
         sub     b               ; calculate x2-x1              [5]

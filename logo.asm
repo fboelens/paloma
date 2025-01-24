@@ -6,7 +6,7 @@ logo:
     ld (bdrclr),a
     call chgclr
 
-    ld a,0
+    xor a
 	ld (ADDR_CLIKSW), a
 
 	di

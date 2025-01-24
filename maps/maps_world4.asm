@@ -66,7 +66,7 @@ maps_world4:
     db 2,5,   3,left,5,false;  enemy 1
     db 24,5,   3,left,5,false ;  enemy 2
     db 1,1,   5,right,1,false ; enemy 3
-    db 8,8,   4,right,7,false ; enemy 4
+    db 8,8,   4,right,5,false ; enemy 4
     db 0,0,   0,left,0,false ; enemy 5
     db 0,0,   0,right,0,false ; enemy 6
     db 0,0 ; box 
@@ -108,7 +108,7 @@ maps_world4:
     incbin "world4/paloma4-8f.pal"
     db 26,1 ; player position
     db 6,1,   5,right,9,true;  enemy 1
-    db 13,18,   4,left,7,false ;  enemy 2
+    db 13,18,   4,left,5,false ;  enemy 2
     db 18,13,   5,right,1,false ; enemy 3
     db 3,7,   4,right,7,false ; enemy 4
     db 25,7,   4,left,7,false ; enemy 5

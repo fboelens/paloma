@@ -225,8 +225,8 @@ enddemo:
 
 writeDemo:
     ld a,(hl)
-    sla a
-    sla a
+    add a,a
+    add a,a
     ld c,a
     ld a,128
     sub c
@@ -260,9 +260,9 @@ writeDemoLoop:
 
     ld a,c
     and %00011111
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (ledsx),a
     
     push hl
@@ -299,8 +299,8 @@ writeDemoNext:
 
     inc hl
     ld a,(hl)
-    sla a
-    sla a
+    add a,a
+    add a,a
     ld c,a
     ld a,128
     sub c
@@ -359,7 +359,7 @@ whipeLettersSpecial2:
     dec c
     dec c
     ld a,c
-    cp 0
+    or a
     ret z
     ld (wpsx),a
     ld (wpdx),a
@@ -385,7 +385,7 @@ whipeLettersSpecialb2:
     djnz whipeLettersSpecialb2
     dec c
     ld a,c
-    cp 0
+    or a
     ret z
     ld (cldy),a
     ld c,a

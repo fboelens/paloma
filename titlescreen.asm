@@ -26,7 +26,7 @@ buildTitleScreen2:
 
     ; handpointer
 
-    ld a,0
+    xor a
     ld (spritePositionHand+2),a
     ld a,4
     ld (spritePositionHand+6),a
@@ -137,7 +137,7 @@ exitTitleScreen2:
 
 	ld a,(defaultLives)
 	ld (playerLives),a
-	ld a,0
+	xor a
 	ld (playerStage),a
     ld hl,0
     ld (playerScore),hl
@@ -245,7 +245,7 @@ passWordScreen:
     ld de,blackPalette
     call colorFader
 
-    ld a,0
+    xor a
     ld (txt_pass_position),a
 
     call kilbuf
@@ -274,9 +274,9 @@ passWordScreen2:
     inc a
     ld (txt_pass_position),a
 passWordScreen3:
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     add a,d
     ld d,a
     ld a,c
@@ -300,7 +300,7 @@ passWordScreen3:
 
 do_passWordBS:
     ld a,(txt_pass_position)
-    cp 0
+    or a
     jp z,passWordScreen2
     dec a
     ld (txt_pass_position),a
@@ -309,9 +309,9 @@ do_passWordBS:
     ld e,76
     ld c,32
 
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     add a,d
     ld d,a
     ld a,c
@@ -381,7 +381,7 @@ passWordCheck:
 
     ld bc,sfx_reverse
     call ttsfx_start
-    ld a,0
+    xor a
     ld (txt_pass_position),a
 
     ld hl,txt_pass_info2
@@ -566,7 +566,7 @@ do_menu1Right:
     
 do_menu2Left:
     ld a,(option_fm_bal)
-    cp 0
+    or a
     ret z
     dec a
     ld (option_fm_bal),a
@@ -588,7 +588,7 @@ do_menu2Right:
 
 do_menu3Left:
     ld a,(option_psg_bal)
-    cp 0
+    or a
     ret z
     dec a
     ld (option_psg_bal),a
@@ -611,7 +611,7 @@ do_menu3Right:
 
 do_menu4Left:
     ld a,(option_sfx_vol)
-    cp 0
+    or a
     ret z
     dec a
     ld (option_sfx_vol),a
@@ -878,7 +878,7 @@ wave5:
     ld a,15 or 128
     out ($99),a
 
-	ld a,0 ; reg #18=0 (leuk effect als dit weg is...)
+	xor a ; reg #18=0 (leuk effect als dit weg is...)
 	out ($9B),a
 
 	in a,($aa)

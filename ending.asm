@@ -6,9 +6,9 @@ ending:
 
     ld a,15
     ld (forclr),a
-    ld a,0
+    xor a
     ld (bakclr),a
-    ld a,0
+    xor a
     ld (bdrclr),a
     call chgclr
 

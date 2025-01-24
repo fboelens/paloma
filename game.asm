@@ -1,12 +1,8 @@
 gameStart:
     ; zet vaste waarden
-    ld a,0
+    xor a
     ld (isrCounter),a
     ld (playerIsDead),a
-    ld (upBlocked),a
-    ld (downBlocked),a
-    ld (leftBlocked),a
-    ld (rightBlocked),a
     ld (isrTimer),a
     ld (playerIsDead),a
     ld (playerJumpBoolean),a
@@ -37,17 +33,8 @@ gameStart:
     ld hl,spikeSpace
     ld (spikePos),hl
 
-    ld hl,spriteColors+32
-    ld (spriteColorsSource),hl
-    ld hl,spriteData+64
-    ld (spriteDataSource),hl
     ld hl,playerMove
     ld (playerMovePointer),hl
-    ld a,0
-    ld (playerFall),a
-
-    ld a,right
-    ld (playerDirection),a
 
     call disscr
     call clearSprites
@@ -56,18 +43,18 @@ gameStart:
     ld hl,(colorSetPointer)
     call SetPalette
 
-    ld a,0
+    xor a
     ld b,255
     ld de,animationSpace
     call fillRam
 
-    ld a,0
+    xor a
     ld de,spikeSpace
     ld b,64
     call fillRam
 
     ld a,(playerLives)
-    cp 0
+    or a
     jp z,gameOver
 
     ; stage init
@@ -83,13 +70,11 @@ gameStart:
     call writeText
     call writeHighScore
 
-    ld d,136
-    ld e,80
+    ld de,((80) & #00ff) + ((136) << 8) 
     ld a,(playerWorld)
     add a,48
     call writeLetter
-    ld d,168
-    ld e,80
+    ld de,((80) & #00ff) + ((168) << 8) 
     ld a,(playerStage)
     add a,48
     call writeLetter
@@ -128,23 +113,58 @@ gameStart:
     call writeKeysInMap
     call writeKeysFound
 
-    ld a,0
+
+    ld d,right
+    ld bc,2*48
+
+    ld a,(px)
+    cp 128
+    jp nc,gameStart2
+
+    ld d,left    
     ld bc,0
+gameStart2:
+    ld a,d
+    ld (playerDirection),a
+    xor a
     call setPlayerSprites
     call updateHelpSprites
 
+    ld  hl,song_world1
+	call    replay_loadsong
+    halt
+    call enascr
 
+    ld a,(spritePositionEnemy1)
+    ld (tempEnemyY),a
+    ld a,216
+    ld (spritePositionEnemy1),a
+    call updateAllSprites        
+
+    ld b,3
+showPlayer:
+    push bc
+    call disableSprites
+    ld b,10
+    call wait
+    call enableSprites
+    ld b,10
+    call wait
+    pop bc
+    djnz showPlayer
+
+    ld a,(tempEnemyY)
+    ld (spritePositionEnemy1),a
 
     di
     ld hl,isr    
+
     call setInterrupt
 
-    ld  hl,song_world1
-	call    replay_loadsong
     ei
 
-    call enemyMovement
-    call enascr
+    ;call enemyMovement
+
 
 main:
     ld b,7              ; F5
@@ -195,6 +215,8 @@ main:
     ld hl,enemy6Dead
     jp c,playerCollision
 
+    call checkSpecialTiles
+
     ld a,(playerIsDead)
     cp true
     jp z,playerDead
@@ -202,6 +224,12 @@ main:
     ld a,(levelCompleted)
     cp true
     jp z,doLevelCompleted
+
+    call animateSpikes
+
+    ld a,(cageFall)
+    cp true
+    call z,doCageFall
 
     ; animate the tiles once in a while
     ld a,(mainCounter)
@@ -211,21 +239,47 @@ main:
     cp 8
     call z,animateTiles
 
-    call animateSpikes
-    call updateBox
-
-    ld a,(cageFall)
-    cp true
-    call z,doCageFall
-
 	halt    
 	jp main
+
+checkSpecialTiles:
+    ; check op deur en dodelijke tiles
+    ld hl,(spritePositionPlayer)
+    ld de,((2) & #00ff) + ((4) << 8) 
+    add hl,de
+    call checkTile
+    cp tile_door
+    call z,checkLevelComplete
+
+    ld hl,(spritePositionPlayer)
+    ld de,((2) & #00ff) + ((12) << 8) 
+    add hl,de
+    call checkTile
+    call checkPlayerSpecialTiles
+
+    ld hl,(spritePositionPlayer)
+    ld de,((12) & #00ff) + ((12) << 8) 
+    add hl,de
+    call checkTile
+    call checkPlayerSpecialTiles
+
+    ld hl,(spritePositionPlayer)
+    ld de,((2) & #00ff) + ((2) << 8) 
+    add hl,de
+    call checkTile
+    call checkPlayerSpecialTiles
+
+    ld hl,(spritePositionPlayer)
+    ld de,((12) & #00ff) + ((2) << 8) 
+    add hl,de
+    call checkTile
+    jp checkPlayerSpecialTiles
 
 doPass:
     ld a,(joyStickValueY)
     cp down
     ret nz
-    ld a,0
+    xor a
     ld (joyStickValueY),a
 
 
@@ -261,8 +315,9 @@ doPause:
 
     call disableSprites
     
+    di
     call resetInterrupt2
-
+    ei
 	ld hl,isrMusic
 	call setInterrupt
 
@@ -293,20 +348,15 @@ doPause3:
     ld hl,isr
     call setInterrupt
     
-    call replay_resume
+    jp replay_resume
 
-    ret
 
 isrMusic:
-    call music
-    ret
+    jp music
 
 isr:
     call updateAllSprites        
     call movePlatform
-
-    call music
-    
 
     ld a,(isrCounter)
     cp 11
@@ -321,17 +371,15 @@ isr:
     ld a,(isrCounter)
     bit 0,a
     call nz,enemyMovement
-
-    call timer
-
-    ret
+    call updateBox
+    call music
+    jp timer
 
 music:
     in	a,(0x99)
 	call	replay_play			; calculate next output
     call	ttsfx_play                
-	call	replay_route		; first outout data        
-    ret
+	jp	replay_route		; first outout data        
 
 movePlatform:
     ld a,(isrCounter)
@@ -343,16 +391,15 @@ movePlatform:
     ret z
 
     call movePlatform1
-    call movePlatform2
-    ret
+    jp movePlatform2
 
 movePlatform1:
     ld a,(platform1X)
-    cp 0
+    or a
     ret z
 
     ld a,(platform1Wait)
-    cp 0
+    or a
     jp z,movePlatform1b
     dec a
     ld (platform1Wait),a
@@ -365,11 +412,11 @@ movePlatform1b:
 
 movePlatform2:
     ld a,(platform2Y)
-    cp 0
+    or a
     ret z
 
     ld a,(platform2Wait)
-    cp 0
+    or a
     jp z,movePlatform2b
     dec a
     ld (platform2Wait),a
@@ -384,8 +431,7 @@ movePlatform2b:
 movePlatformLeft:
     ld hl,(platform1Y)
     dec h
-    ld d,0
-    ld e,0
+    ld de,((0) & #00ff) + ((0) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -410,8 +456,7 @@ movePlatformLeft:
     
     ; check linksboven
     ld hl,(spritePositionPlayer)
-    ld d,0
-    ld e,7
+    ld de,((7) & #00ff) + ((0) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -419,8 +464,7 @@ movePlatformLeft:
 
     ; check linksonder
     ld hl,(spritePositionPlayer)
-    ld d,0
-    ld e,15
+    ld de,((15) & #00ff) + ((0) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -436,14 +480,11 @@ movePlatformLeft2:
     call DoCopy
 
     ld hl,platform1Recover
-    call DoCopy
-
-    ret
+    jp DoCopy
 
 movePlatformRight:
     ld hl,(platform1Y)
-    ld d,16
-    ld e,0
+    ld de,((0) & #00ff) + ((16) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -468,8 +509,7 @@ movePlatformRight:
 
     ; check rechtboven
     ld hl,(spritePositionPlayer)
-    ld d,16
-    ld e,7
+    ld de,((7) & #00ff) + ((16) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -477,8 +517,7 @@ movePlatformRight:
 
     ; check rechtsonder
     ld hl,(spritePositionPlayer)
-    ld d,16
-    ld e,15
+    ld de,((15) & #00ff) + ((16) << 8)    
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -494,14 +533,11 @@ movePlatformRight2:
     call DoCopy
 
     ld hl,platform1Recover
-    call DoCopy
-
-    ret
+    jp DoCopy
 
 movePlatformUp:
     ld hl,(platform2Y)
-    ld d,0
-    ld e,0
+    ld de,((0) & #00ff) + ((0) << 8)
     add hl,de
     call checkTile
     cp tile_blockPlatform
@@ -527,15 +563,13 @@ movePlatformUp:
     ; dodelijk?
     ; check linksboven voor springen
     ld hl,(spritePositionPlayer)
-    ld d,12
-    ld e,4
+    ld de,((4) & #00ff) + ((12) << 8)    
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
     call z,setPlayerIsDead
     ld hl,(spritePositionPlayer)
-    ld d,4
-    ld e,4
+    ld de,((4) & #00ff) + ((4) << 8)
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -546,24 +580,18 @@ movePlatformUp2:
     call DoCopy
 
     ld hl,platform2Recover
-    call DoCopy
-
-
-    ret
-
+    jp DoCopy
 
 movePlatformDown:
     ld hl,(platform2Y)
-    ld d,1
-    ld e,9
+    ld de,((9) & #00ff) + ((1) << 8)    
     add hl,de
     call checkTile
     cp tile_blockPlatform
     jp z,movePlatformToUp
 
     ld hl,(platform2Y)
-    ld d,1
-    ld e,9
+    ld de,((9) & #00ff) + ((1) << 8)    
     add hl,de
     call checkTile
     call checkPlayerSurroundingsBlocker
@@ -590,9 +618,7 @@ movePlatformDown2:
     call DoCopy
 
     ld hl,platform2Recover
-    call DoCopy
-
-    ret
+    jp DoCopy
 
 movePlatformToLeft:
     ld a,left
@@ -660,7 +686,7 @@ timer:
     jp s,setPlayerIsDead
     call writeTime
 
-    ld a,0
+    xor a
     ld (isrTimer),a
 
     ret
@@ -673,7 +699,7 @@ updateBox:
     call checkBoxUnderGround
 
     ld a,(boxmoveCounter)
-    cp 0
+    or a
     ret z
     dec a
     ld (boxmoveCounter),a
@@ -689,40 +715,47 @@ updateBox:
     ret
 
 updateBoxLeft:
-    ld a,(spritePositionBox+1) ; xpos
-    dec a
-    dec a
-    ld (spritePositionBox+1),a
-    ld (spritePositionBox+5),a
-
     ld ix,spritePositionPlayer
     call BoxCollisionCheck 
-    jp c,playerUp
-    
-    call boxEnemyCollision
-    ret
+    jp nc,updateBoxLeft2
+
+    ld a,(px)
+    ld c,a
+    ld a,(spritePositionBox+1)
+    sub c
+    ret nc
+
+updateBoxLeft2:
+    ld a,(spritePositionBox+1) ; xpos
+    add a,-2
+    ld (spritePositionBox+1),a
+    ld (spritePositionBox+5),a
+    jp boxEnemyCollision
+
 updateBoxRight:
-    ld a,(spritePositionBox+1) ; xpos
-    inc a
-    inc a
-    ld (spritePositionBox+1),a
-    ld (spritePositionBox+5),a
-
     ld ix,spritePositionPlayer
     call BoxCollisionCheck 
-    jp c,playerUp
+    jp nc,updateBoxRight2
 
-    call boxEnemyCollision
-    ret
+    ld a,(px)
+    ld c,a
+    ld a,(spritePositionBox+1)
+    sub c
+    ret c
+
+updateBoxRight2:
+    ld a,(spritePositionBox+1) ; xpos
+    add 2
+    ld (spritePositionBox+1),a
+    ld (spritePositionBox+5),a
+    jp boxEnemyCollision
+
 updateBoxDown:
     ld a,(spritePositionBox) ; xpos
-    inc a
-    inc a
+    add 2
     ld (spritePositionBox),a
     ld (spritePositionBox+4),a
-
-    call boxEnemyCollision
-    ret
+    ;jp boxEnemyCollision
 
 boxEnemyCollision:
     ld ix,spritePositionEnemy1
@@ -758,14 +791,14 @@ boxEnemyCollision:
 
 
 resetScreen:    
-    ld a,0
+    xor a
     ld (mapdx),a
     ld (mapdy),a
-    ld a,0
+    xor a
     ld (cldy),a
 
     ld b,212
-    ld a,0
+    xor a
 resetScreen2:
     push bc
     ld hl,clearLine
@@ -784,7 +817,7 @@ wait:
 
 clearSprites:
     ld hl,spritePositionPlayer
-    ld b,64
+    ld b,22
     ld a,216
 clearSprites2
     ld (hl),a
@@ -798,66 +831,15 @@ clearSprites2
 	ld	de,$7600
 	ld	bc,255 ; 3 player sprites + 3*2 enemie sprites
 	ld	a,3
-    call	CopyRamVram
-    ret
-
-
+    jp	CopyRamVram
 
 updateAllSprites:
-    ld a,(isrCounter)
-    bit 0,a
-    jp z,updateAllSprites2
-updateAllSprites3:
     ld a,3
     ld  hl,$7600
     call SetVramWrite
     ld hl,spritePositionPlayer
-    ld b,32  ;(2 (player) + 12 (enemies) + 2 (box) + 2 (help) )  *  4
-    ld c,$98
+    ld bc,((#98) & #00ff) + ((32 + 48) << 8)
     otir
-
-    ld a,3
-    ld  hl,$7400
-    call SetVramWrite
-    ld hl,spriteColors
-	ld b,128
-    ld c,$98
-    otir
-
-    ld a,3
-    ld hl,$7800
-    call SetVramWrite
-    ld  hl,spriteData
-	ld	b,0 
-    ld c,$98
-    otir
-
-    ret
-updateAllSprites2:
-    ld a,3
-    ld  hl,$7600+32
-    call SetVramWrite
-    ld hl,spritePositionPlayer+32
-    ld b,48
-    ld c,$98
-    otir
-
-    ld a,3
-    ld  hl,$7400+128
-    call SetVramWrite
-    ld hl,spriteColors+128
-	ld b,96
-    ld c,$98
-    otir
-
-    ld a,3
-    ld hl,$7800+256
-    call SetVramWrite
-    ld  hl,spriteData+256
-	ld	b,192
-    ld c,$98
-    otir
-
     ret
 
 
@@ -874,9 +856,7 @@ updateBoxSprites:
 	ld	de,$74E0
 	ld	bc,32
 	ld	a,3
-    call	CopyRamVram
-
-    ret
+    jp	CopyRamVram
 
 updateHelpSprites:
     ld hl,spriteDataHelp
@@ -889,69 +869,68 @@ updateHelpSprites:
 	ld	de,$7500
 	ld	bc,32*2
 	ld	a,3
-    call	CopyRamVram
-    ret
-
+    jp	CopyRamVram
 
 setPlayerSprites:
-    ; copy sprite data and colors
-    di
-    ld hl,spriteColorsPlayer
     ld d,0
     ld e,a
-    add hl,de
-    push de
+
+    ; copy sprite data and colors
+    ld a,3
+    ld  hl,$7400
+    call SetVramWrite
+    ld hl,spriteColorsPlayer
+    add hl,de    
     push bc
-    ld bc,32
-    ld de,spriteColors
-    ldir
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
 
     pop bc
-    pop de
 
-    ld hl,spriteDataPlayer
+    ld a,3
+    ld hl,$7800
+    call SetVramWrite
+    ld  hl,spriteDataPlayer
     add hl,bc    
     add hl,bc        
     add hl,de    
     add hl,de    
-    ld bc,64
-    ld de,spriteData
-    ldir
-    ei
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     ret
 
 ; bc points to enemy x
 setEnemySprites:
-    ; copy sprite data and colors
-    ld hl,(spriteColorsEnemyPointer)
-    add hl,bc
     ld d,0
     ld e,a
+
+    ; copy sprite data and colors
+    ld a,3
+    ld hl,(spriteColorsSource)
+    call SetVramWrite
+    ld hl,(spriteColorsEnemyPointer)
+    add hl,bc
     add hl,de
-    push de
     push bc
-    ld bc,32
-    ld de,(spriteColorsSource) ; calculate correct target depending on enemy nr
-    ldir
-
+    ld bc,((#98) & #00ff) + ((32) << 8)
+    otir
     pop bc
-    pop de
 
+    ld a,3
+    ld hl,(spriteDataSource)
+    call SetVramWrite
     ld hl,(spriteDataEnemyPointer)
     add hl,bc    
     add hl,bc        
     add hl,de    
     add hl,de    
-    ld bc,64
-    ld de,(spriteDataSource) ; calculate correct target depending on enemy nr
-    ldir
-
+    ld bc,((#98) & #00ff) + ((64) << 8)
+    otir
     ret
-
 
 setSwitchOff:
     ld a,(level_switch_time)
-    cp 0
+    or a
     jp z,setSwitchOff2
     dec a
     ld (level_switch_time),a
@@ -978,7 +957,7 @@ setSwitchOff2:
 
 setSwitchOn:
     ld a,(level_switch_time)
-    cp 0
+    or a
     jp z,setSwitchOn2
     dec a
     ld (level_switch_time),a
@@ -1021,9 +1000,9 @@ writeLetters:
 
     ld a,c    
     and %00011111    
-    sla a
-    sla a
-    sla a
+    add a,a
+    add a,a
+    add a,a
     ld (lesx),a
 
     ld hl,letters
@@ -1054,8 +1033,7 @@ writeTime:
     call writeLetters
     inc de
     ld a,(de)
-    call writeLetters
-    ret
+    jp writeLetters
 
 writeScore:
     ld hl,(playerScore)
@@ -1082,8 +1060,7 @@ writeScore:
     call writeLetters
     inc de
     ld a,(de)
-    call writeLetters
-    ret
+    jp writeLetters
 
 writeHighScore:
     ld hl,(playerHighScore)
@@ -1110,8 +1087,7 @@ writeHighScore:
     call writeLetters
     inc de
     ld a,(de)
-    call writeLetters
-    ret
+    jp writeLetters
 
 writeLifes:
     ld a,80
@@ -1124,7 +1100,6 @@ writeLifes2:
     ld l,a
     ld de,playerLivesAsc
     call Num2Dec
-    
 
     ld de,playerLivesAsc+3
 
@@ -1132,27 +1107,22 @@ writeLifes2:
     call writeLetters
     inc de
     ld a,(de)
-    call writeLetters
-    ret
+    jp writeLetters
 
 writeKeysFound:
-    ld d,80
-    ld e,169
+    ld de,((169) & #00ff) + ((80) << 8)
     ld a,(keysLeft)    
     ld b,a
     ld a,(keysInMap)
     sub b
     add a,48
-    call writeLetter
-    ret
+    jp writeLetter
 
 writeKeysInMap:
-    ld d,96
-    ld e,169
+    ld de,((169) & #00ff) + ((96) << 8)
     ld a,(keysInMap)
     add a,48
-    call writeLetter
-    ret
+    jp writeLetter
 
 writeLevelTitle:
     ld hl,(textWorldPointer)
@@ -1166,8 +1136,8 @@ writeLevelTitle2:
     dec b
 
     ld a,b
-    sla a
-    sla a
+    add a,a
+    add a,a
     ld c,a
     ld a,128
     sub c
@@ -1242,7 +1212,7 @@ gameOverContinue
     ld a,(defaultLives)
     ld (playerLives),a
 
-    ld a,0
+    xor a
     ld (playerStage),a
 
     ld a,(playerWorld)
@@ -1277,8 +1247,7 @@ addScore:
     ld hl,(playerScore)
     add hl,de
     ld (playerScore),hl
-    call writeScore
-    ret
+    jp writeScore
 
 setTextBar:
     ld a,(iy)
@@ -1293,10 +1262,8 @@ setTextBar:
     
     call backupTextBar
 
-
     ld hl,textbar
-    ld b,18
-    ld c,4
+    ld bc,((4) & #00ff) + ((18) << 8)
 
 setTextBarLoop:
     push bc
@@ -1311,9 +1278,9 @@ setTextBarLoop:
 
 	ld a,c
 	and %00011111		; bereken sx
-	sla a
-	sla a
-	sla a
+	add a,a
+	add a,a
+	add a,a
 	ld (stsx),a
 
     push hl
@@ -1332,7 +1299,7 @@ setTextBarLoop:
 
     dec c
     ld a,c
-    cp 0
+    or a
     ret z
 
     ld a,(stdy)
@@ -1373,9 +1340,7 @@ removeTextBar:
     ld (rpny),a
     
     ld hl,repairScreen
-    call DoCopy
-    ret
-
+    jp DoCopy
 
 doCageFall:
     ld b,50
@@ -1420,7 +1385,7 @@ doCageFall2:
     djnz doCageFall2
     
 
-    ld a,0
+    xor a
     ld (enemy6AI),a ; enemyAI princes stilstaan
 
     ld	bc,sfx_enemydead
